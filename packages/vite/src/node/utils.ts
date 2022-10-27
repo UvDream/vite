@@ -331,7 +331,7 @@ export function prettifyUrl(url: string, root: string): string {
     return colors.dim(url)
   }
 }
-
+// 判断是否是对象
 export function isObject(value: unknown): value is Record<string, any> {
   return Object.prototype.toString.call(value) === '[object Object]'
 }
@@ -345,6 +345,12 @@ interface LookupFileOptions {
   rootDir?: string
 }
 
+/**
+ * 读取文件
+ * @param dir 目录
+ * @param formats 文件名
+ * @param options 配置
+ */
 export function lookupFile(
   dir: string,
   formats: string[],

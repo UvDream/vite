@@ -1,0 +1,17 @@
+{
+  "name": "my-vue-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "debug": "node --inspect-brk ../../packages/vite/bin/vite",
+    "dev": "vite -d",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^4.6.4",
+    "vite": "^3.1.0",
+    "@vitejs/plugin-react": "^2.2.0"
+  }
+}

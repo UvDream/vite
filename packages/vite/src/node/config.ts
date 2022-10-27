@@ -71,9 +71,18 @@ export interface UserConfig {
    * the location of the config file itself.
    * @default process.cwd()
    */
+  /**
+   * 项目根目录,可以使绝对路径,也可以是相对路径
+   * 配置文件的位置
+   * @default process.cwd() 默认位置
+   */
   root?: string
   /**
    * Base public path when served in development or production.
+   * @default '/'
+   */
+  /**
+   * 在开发或者生产环境中基础的公共路径
    * @default '/'
    */
   base?: string
@@ -83,6 +92,12 @@ export interface UserConfig {
    * can be either an absolute file system path or a path relative to <root>.
    *
    * Set to `false` or an empty string to disable copied static assets to build dist dir.
+   * @default 'public'
+   */
+  /**
+   * 作为静态资源的目录,这个目录下的文件会被原封不动的复制到构建的目录中
+   * 这个值可以是绝对路径,也可以是相对于<root>的路径
+   * 设置为false或者空字符串,可以禁止复制静态资源到构建目录中
    * @default 'public'
    */
   publicDir?: string | false
@@ -95,74 +110,131 @@ export interface UserConfig {
    * Default to `.vite` when no `package.json` is detected.
    * @default 'node_modules/.vite'
    */
+  /**
+   * 保存缓存文件的目录,这个目录下的文件是预先打包的依赖或者其他由vite生成的缓存文件
+   * 这个可以提高性能,你可以使用--force标志或者手动删除这个目录来重新生成缓存文件
+   * 这个值可以是绝对路径,也可以是相对于<root>的路径
+   * 当没有检测到package.json时,默认为.vite
+   * @default 'node_modules/.vite'
+   */
   cacheDir?: string
   /**
    * Explicitly set a mode to run in. This will override the default mode for
    * each command, and can be overridden by the command line --mode option.
+   */
+  /**
+   * 显式设置运行模式,这将覆盖每个命令的默认模式,并且可以被命令行的--mode选项覆盖
+   * @default 'development'
    */
   mode?: string
   /**
    * Define global variable replacements.
    * Entries will be defined on `window` during dev and replaced during build.
    */
+  /**
+   * 定义全局变量替换
+   * 在开发环境中,这些变量会被定义在window上,在构建时会被替换
+   */
   define?: Record<string, any>
   /**
    * Array of vite plugins to use.
+   */
+  /**
+   * 使用的vite插件数组
    */
   plugins?: (PluginOption | PluginOption[])[]
   /**
    * Configure resolver
    */
+  /**
+   * 配置解析器
+   */
   resolve?: ResolveOptions & { alias?: AliasOptions }
   /**
    * CSS related options (preprocessors and CSS modules)
    */
+  /**
+   * css相关的选项(预处理器和css模块)
+   */
   css?: CSSOptions
   /**
    * JSON loading options
+   */
+  /**
+   * json加载选项
    */
   json?: JsonOptions
   /**
    * Transform options to pass to esbuild.
    * Or set to `false` to disable esbuild.
    */
+  /**
+   * 传递给esbuild的转换选项
+   */
   esbuild?: ESBuildOptions | false
   /**
    * Specify additional picomatch patterns to be treated as static assets.
+   */
+  /**
+   * 指定额外的picomatch模式,被视为静态资源
    */
   assetsInclude?: string | RegExp | (string | RegExp)[]
   /**
    * Server specific options, e.g. host, port, https...
    */
+  /**
+   * 服务器特定的选项,例如host,port,https...
+   */
   server?: ServerOptions
   /**
    * Build specific options
+   */
+  /**
+   * 构建特定的选项
    */
   build?: BuildOptions
   /**
    * Preview specific options, e.g. host, port, https...
    */
+  /**
+   * 预览特定的选项,例如host,port,https...
+   */
   preview?: PreviewOptions
   /**
    * Dep optimization options
+   */
+  /**
+   * 依赖优化选项
    */
   optimizeDeps?: DepOptimizationOptions
   /**
    * SSR specific options
    * @alpha
    */
+  /**
+   * SSR特定的选项
+   */
   ssr?: SSROptions
   /**
    * Log level.
    * Default: 'info'
    */
+  /**
+   * 日志级别
+   */
   logLevel?: LogLevel
   /**
    * Custom logger.
    */
+  /**
+   * 自定义日志器
+   */
   customLogger?: Logger
   /**
    * Default: true
+   */
+  /**
+   * 默认为true
    */
   clearScreen?: boolean
   /**
@@ -170,15 +242,25 @@ export interface UserConfig {
    * the location of the config file itself.
    * @default root
    */
+  /**
+   * 环境文件目录,可以是绝对路径,也可以是相对于配置文件本身的路径
+   */
   envDir?: string
   /**
    * Env variables starts with `envPrefix` will be exposed to your client source code via import.meta.env.
    * @default 'VITE_'
    */
+  /**
+   * 以envPrefix开头的环境变量将通过import.meta.env暴露给客户端源代码
+   */
   envPrefix?: string | string[]
   /**
    * Import aliases
    * @deprecated use `resolve.alias` instead
+   */
+  /**
+   * 导入别名
+   * @deprecated 使用`resolve.alias`代替
    */
   alias?: AliasOptions
   /**
@@ -186,9 +268,16 @@ export interface UserConfig {
    * project root).
    * @deprecated use `resolve.dedupe` instead
    */
+  /**
+   * 强制Vite始终将列出的依赖项解析为同一副本(从项目根目录)
+   * @deprecated 使用`resolve.dedupe`代替
+   */
   dedupe?: string[]
   /**
    * Worker bundle options
+   */
+  /**
+   * worker包选项
    */
   worker?: {
     /**
@@ -275,6 +364,12 @@ export type ResolveFn = (
   ssr?: boolean
 ) => Promise<string | undefined>
 
+/**
+ * 处理配置信息
+ * @param inlineConfig 命令行接受的参数
+ * @param command 运行模式 build | serve
+ * @param defaultMode 运行环境 development | production
+ */
 export async function resolveConfig(
   inlineConfig: InlineConfig,
   command: 'build' | 'serve',
@@ -282,11 +377,10 @@ export async function resolveConfig(
 ): Promise<ResolvedConfig> {
   let config = inlineConfig
   let configFileDependencies: string[] = []
+  //如果命令行没有传入这个参数就使用默认的配置的模式(这个默认模式上个函数createServer传入的)
   let mode = inlineConfig.mode || defaultMode
 
-  // some dependencies e.g. @vue/compiler-* relies on NODE_ENV for getting
-  // production-specific behavior, so set it here even though we haven't
-  // resolve the final mode yet
+  //设置process.env.NODE_ENV的值
   if (mode === 'production') {
     process.env.NODE_ENV = 'production'
   }
@@ -295,8 +389,9 @@ export async function resolveConfig(
     mode,
     command
   }
-
+  //配置文件目录
   let { configFile } = config
+  //如果命令行没有传入配置文件目录就使用默认的配置文件目录
   if (configFile !== false) {
     const loadResult = await loadConfigFromFile(
       configEnv,
@@ -305,6 +400,7 @@ export async function resolveConfig(
       config.logLevel
     )
     if (loadResult) {
+      //读取的配置和命令行传入的配置合并
       config = mergeConfig(loadResult.config, config)
       configFile = loadResult.path
       configFileDependencies = loadResult.dependencies
@@ -318,10 +414,12 @@ export async function resolveConfig(
   })
 
   // user config may provide an alternative mode. But --mode has a higher priority
+  //命令行传入配置更高一级
   mode = inlineConfig.mode || config.mode || mode
   configEnv.mode = mode
 
   // resolve plugins
+  //flat 拍平数组,默认深度为1
   const rawUserPlugins = (config.plugins || []).flat().filter((p) => {
     if (!p) {
       return false
@@ -842,6 +940,13 @@ export function sortUserPlugins(
   return [prePlugins, normalPlugins, postPlugins]
 }
 
+/**
+ * 从配置文件中加载配置
+ * @param configEnv
+ * @param configFile 配置文件目录
+ * @param configRoot
+ * @param logLevel
+ */
 export async function loadConfigFromFile(
   configEnv: ConfigEnv,
   configFile?: string,
@@ -852,6 +957,7 @@ export async function loadConfigFromFile(
   config: UserConfig
   dependencies: string[]
 } | null> {
+  //性能计算埋点
   const start = performance.now()
   const getTime = () => `${(performance.now() - start).toFixed(2)}ms`
 
@@ -860,25 +966,25 @@ export async function loadConfigFromFile(
   let isESM = false
   let dependencies: string[] = []
 
-  // check package.json for type: "module" and set `isMjs` to true
+  //读取项目package.json判断项目模式是否采用esm模式
   try {
     const pkg = lookupFile(configRoot, ['package.json'])
     if (pkg && JSON.parse(pkg).type === 'module') {
       isESM = true
     }
   } catch (e) {}
-
+  //这一段就一个目的,寻找配置文件
   if (configFile) {
-    // explicit config path is always resolved from cwd
     resolvedPath = path.resolve(configFile)
+    //判断是否是ts文件
     isTS = configFile.endsWith('.ts')
 
     if (configFile.endsWith('.mjs')) {
       isESM = true
     }
-  } else {
-    // implicit config file loaded from inline root (if present)
-    // otherwise from cwd
+  }
+  else {
+    //如果不存在配置文件路径，则根据项目模式采用默认的配置文件vite.config.js/vite.config.ts/vite.config.mjs/vite.config.cjs
     const jsconfigFile = path.resolve(configRoot, 'vite.config.js')
     if (fs.existsSync(jsconfigFile)) {
       resolvedPath = jsconfigFile
@@ -927,6 +1033,7 @@ export async function loadConfigFromFile(
         // bundle the config file w/ ts transforms first, write it to disk,
         // load it with native Node ESM, then delete the file.
         fs.writeFileSync(resolvedPath + '.js', bundled.code)
+        //读取配置文件信息
         userConfig = (await dynamicImport(`${fileUrl}.js?t=${Date.now()}`))
           .default
         fs.unlinkSync(resolvedPath + '.js')
@@ -947,7 +1054,7 @@ export async function loadConfigFromFile(
       userConfig = await loadConfigFromBundledFile(resolvedPath, bundled.code)
       debug(`bundled config file loaded in ${getTime()}`)
     }
-
+    //判断配置文件是否是函数
     const config = await (typeof userConfig === 'function'
       ? userConfig(configEnv)
       : userConfig)
@@ -967,11 +1074,12 @@ export async function loadConfigFromFile(
     throw e
   }
 }
-
+//利用esbuild读取配置文件信息
 async function bundleConfigFile(
   fileName: string,
   isESM = false
 ): Promise<{ code: string; dependencies: string[] }> {
+  //esbuild
   const result = await build({
     absWorkingDir: process.cwd(),
     entryPoints: [fileName],
