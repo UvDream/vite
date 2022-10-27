@@ -420,6 +420,7 @@ export async function resolveConfig(
 
   // resolve plugins
   //flat 拍平数组,默认深度为1
+  //读取插件
   const rawUserPlugins = (config.plugins || []).flat().filter((p) => {
     if (!p) {
       return false
@@ -982,8 +983,7 @@ export async function loadConfigFromFile(
     if (configFile.endsWith('.mjs')) {
       isESM = true
     }
-  }
-  else {
+  } else {
     //如果不存在配置文件路径，则根据项目模式采用默认的配置文件vite.config.js/vite.config.ts/vite.config.mjs/vite.config.cjs
     const jsconfigFile = path.resolve(configRoot, 'vite.config.js')
     if (fs.existsSync(jsconfigFile)) {
