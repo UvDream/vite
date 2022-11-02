@@ -5,7 +5,7 @@ function react() {
   return {}
 }
 export default defineConfig({
-  base: '/',
+  base: '/vue',
   clearScreen: false,
   server: {
     port: 3000,

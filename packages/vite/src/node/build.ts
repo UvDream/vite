@@ -232,6 +232,10 @@ export type ResolvedBuildOptions = Required<
   >
 >
 
+/**
+ * 处理build的配置
+ * @param raw
+ */
 export function resolveBuildOptions(raw?: BuildOptions): ResolvedBuildOptions {
   const resolved: ResolvedBuildOptions = {
     target: 'modules',

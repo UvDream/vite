@@ -346,7 +346,7 @@ interface LookupFileOptions {
 }
 
 /**
- * 读取文件
+ * 读取文件路径也可以判断文件是否存在
  * @param dir 目录
  * @param formats 文件名
  * @param options 配置
@@ -704,7 +704,9 @@ export function resolveHostname(
 
   return { host, name }
 }
-
+/**
+ * 对象转数组
+ */
 export function arraify<T>(target: T | T[]): T[] {
   return Array.isArray(target) ? target : [target]
 }

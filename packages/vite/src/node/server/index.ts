@@ -694,6 +694,11 @@ function resolvedAllowDir(root: string, dir: string): string {
   return normalizePath(path.resolve(root, dir))
 }
 
+/**
+ * 处理运行时参数,比如设置运行端口
+ * @param root 根路径
+ * @param raw server 配置(viet.config)
+ */
 export function resolveServerOptions(
   root: string,
   raw?: ServerOptions

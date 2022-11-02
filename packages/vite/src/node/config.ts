@@ -418,7 +418,7 @@ export async function resolveConfig(
   mode = inlineConfig.mode || config.mode || mode
   configEnv.mode = mode
 
-  // resolve plugins
+  // 处理插件
   //flat 拍平数组,默认深度为1
   //读取插件
   const rawUserPlugins = (config.plugins || []).flat().filter((p) => {
@@ -432,10 +432,11 @@ export async function resolveConfig(
       return p.apply === command
     }
   }) as Plugin[]
+  //读取插件的配置,以及分类插件
   const [prePlugins, normalPlugins, postPlugins] =
     sortUserPlugins(rawUserPlugins)
 
-  // resolve worker
+  // 处理worker参数
   const resolvedWorkerOptions: ResolveWorkerOptions = {
     format: config.worker?.format || 'iife',
     plugins: [],
@@ -453,17 +454,20 @@ export async function resolveConfig(
     }
   }
 
-  // resolve root
+  // 处理根目录
   const resolvedRoot = normalizePath(
     config.root ? path.resolve(config.root) : process.cwd()
   )
 
+  //内置别名配置
   const clientAlias = [
     { find: /^[\/]?@vite\/env/, replacement: () => ENV_ENTRY },
     { find: /^[\/]?@vite\/client/, replacement: () => CLIENT_ENTRY }
   ]
 
   // resolve alias with internal client alias
+  // 处理别名,处理成标准格式[{"find":"@","replacement":"/Users/xxx/xxx/xxx"}]
+  //可能resolve.alias ||alias 是一个对象,也可能是一个数组
   const resolvedAlias = normalizeAlias(
     mergeAlias(
       // @ts-ignore because @rollup/plugin-alias' type doesn't allow function
@@ -472,17 +476,20 @@ export async function resolveConfig(
       config.resolve?.alias || config.alias || []
     )
   )
-
+  //resolve 配置信息
   const resolveOptions: ResolvedConfig['resolve'] = {
     dedupe: config.dedupe,
     ...config.resolve,
     alias: resolvedAlias
   }
 
-  // load .env files
+  // load .env.development files
+  //获取项目路径
   const envDir = config.envDir
     ? normalizePath(path.resolve(resolvedRoot, config.envDir))
     : resolvedRoot
+
+  //获取.env.[mode]文件中环境变量
   const userEnv =
     inlineConfig.envFile !== false &&
     loadEnv(mode, envDir, resolveEnvPrefix(config))
@@ -490,6 +497,7 @@ export async function resolveConfig(
   // Note it is possible for user to have a custom mode, e.g. `staging` where
   // production-like behavior is expected. This is indicated by NODE_ENV=production
   // loaded from `.staging.env` and set by us as VITE_USER_NODE_ENV
+  //判断是否是生产环境设置NODE环境变量
   const isProduction = (process.env.VITE_USER_NODE_ENV || mode) === 'production'
   if (isProduction) {
     // in case default mode was not production and is overwritten
@@ -497,23 +505,28 @@ export async function resolveConfig(
   }
 
   // resolve public base url
+  //处理公共路径
   const BASE_URL = resolveBaseUrl(config.base, command === 'build', logger)
   const resolvedBuildOptions = resolveBuildOptions(config.build)
 
   // resolve cache directory
+  //package.json中路径
   const pkgPath = lookupFile(resolvedRoot, [`package.json`], { pathOnly: true })
+  //缓存文件目录获取,默认是node_modules/.vite,但是用户可以传入配置自定义位置
   const cacheDir = config.cacheDir
     ? path.resolve(resolvedRoot, config.cacheDir)
     : pkgPath
     ? path.join(path.dirname(pkgPath), `node_modules/.vite`)
     : path.join(resolvedRoot, `.vite`)
-
+  //TODO 这个参数用处是什么?
   const assetsFilter = config.assetsInclude
     ? createFilter(config.assetsInclude)
     : () => false
 
   // create an internal resolver to be used in special scenarios, e.g.
   // optimizer & handling css @imports
+  //TODO
+  //创建一个内部的解析器,用于特殊的场景,比如优化器和处理css @imports
   const createResolver: ResolvedConfig['createResolver'] = (options) => {
     let aliasContainer: PluginContainer | undefined
     let resolverContainer: PluginContainer | undefined
@@ -550,8 +563,9 @@ export async function resolveConfig(
       return (await container.resolveId(id, importer, { ssr }))?.id
     }
   }
-
+  //静态资源目录
   const { publicDir } = config
+  //处理静态资源目录为标准格式 eg:/Users/wzj/Desktop/wzj/vite/source-code/vite/demo/my-vue-app/public
   const resolvedPublicDir =
     publicDir !== false && publicDir !== ''
       ? path.resolve(
@@ -559,7 +573,7 @@ export async function resolveConfig(
           typeof publicDir === 'string' ? publicDir : 'public'
         )
       : ''
-
+  // 处理运行时配置参数 eg:设置启动端口号
   const server = resolveServerOptions(resolvedRoot, config.server)
 
   const resolved: ResolvedConfig = {
@@ -765,6 +779,12 @@ export async function resolveConfig(
  * Resolve base. Note that some users use Vite to build for non-web targets like
  * electron or expects to deploy
  */
+/**
+ * 解决base Url,解决一些用户使用Vite来构建非Web目标，如electron或预期部署的问题
+ * @param base 路径
+ * @param isBuild 是否是打包
+ * @param logger
+ */
 function resolveBaseUrl(
   base: UserConfig['base'] = '/',
   isBuild: boolean,
@@ -774,6 +794,7 @@ function resolveBaseUrl(
   if (base === '' || base === './') {
     return isBuild ? base : '/'
   }
+  //startsWidth 判断是否以某个字符串开头
   if (base.startsWith('.')) {
     logger.warn(
       colors.yellow(
@@ -815,7 +836,7 @@ function resolveBaseUrl(
 
   return base
 }
-
+//TODO
 function mergeConfigRecursively(
   defaults: Record<string, any>,
   overrides: Record<string, any>,
@@ -864,6 +885,12 @@ function mergeConfigRecursively(
   return merged
 }
 
+/**
+ * 合并配置
+ * @param defaults
+ * @param overrides
+ * @param isRoot
+ */
 export function mergeConfig(
   defaults: Record<string, any>,
   overrides: Record<string, any>,
@@ -872,12 +899,18 @@ export function mergeConfig(
   return mergeConfigRecursively(defaults, overrides, isRoot ? '' : '.')
 }
 
+/**
+ * 合并内置别名配置以及配置文件传入的配置
+ * @param a 内置配置别名
+ * @param b 配置文件别名
+ */
 function mergeAlias(
   a?: AliasOptions,
   b?: AliasOptions
 ): AliasOptions | undefined {
   if (!a) return b
   if (!b) return a
+  //判断配置是否都是对象,如果都是对象形式可以直接合并返回,因为alias有多种写法
   if (isObject(a) && isObject(b)) {
     return { ...a, ...b }
   }
@@ -885,7 +918,11 @@ function mergeAlias(
   // where the later should have higher priority
   return [...normalizeAlias(b), ...normalizeAlias(a)]
 }
-
+/**
+ * 转换alias格式
+ * 例如: {"A":"@/src"} 转换为 [{find:"A",replacement:"@/src"}] 以便后续处理
+ * 简单的理解就是键值对转换为数组对象
+ */
 function normalizeAlias(o: AliasOptions = []): Alias[] {
   return Array.isArray(o)
     ? o.map(normalizeSingleAlias)
@@ -899,6 +936,12 @@ function normalizeAlias(o: AliasOptions = []): Alias[] {
 
 // https://github.com/vitejs/vite/issues/1363
 // work around https://github.com/rollup/plugins/issues/759
+/**
+ * 组装alias{"find":"A","replacement":"@/src"}
+ * @param find
+ * @param replacement
+ * @param customResolver
+ */
 function normalizeSingleAlias({
   find,
   replacement,
@@ -917,12 +960,17 @@ function normalizeSingleAlias({
     find,
     replacement
   }
+  //传入就使用
   if (customResolver) {
     alias.customResolver = customResolver
   }
   return alias
 }
 
+/**
+ * 插件分类根据`enforce`参数分为 前置插件 中置插件 后置插件
+ * @param plugins
+ */
 export function sortUserPlugins(
   plugins: (Plugin | Plugin[])[] | undefined
 ): [Plugin[], Plugin[], Plugin[]] {
@@ -1074,7 +1122,12 @@ export async function loadConfigFromFile(
     throw e
   }
 }
-//利用esbuild读取配置文件信息
+
+/**
+ * 利用esbuild读取配置文件信息
+ * @param fileName
+ * @param isESM
+ */
 async function bundleConfigFile(
   fileName: string,
   isESM = false
@@ -1159,19 +1212,28 @@ async function loadConfigFromBundledFile(
   return config
 }
 
+/**
+ * 加载环境变量文件中变量
+ * @param mode 模式
+ * @param envDir 项目路径
+ * @param prefixes 环境变量前缀,可以在vite.config.ts中设置
+ */
 export function loadEnv(
   mode: string,
   envDir: string,
   prefixes: string | string[] = 'VITE_'
 ): Record<string, string> {
+  //本地模式不加载
   if (mode === 'local') {
     throw new Error(
       `"local" cannot be used as a mode name because it conflicts with ` +
         `the .local postfix for .env files.`
     )
   }
+  // 防止你传入对象正确格式["VITE_", "VUE_"] 兼容 {"VITE_", "VUE_"} 两种格式
   prefixes = arraify(prefixes)
   const env: Record<string, string> = {}
+  //可能存在的文件格式
   const envFiles = [
     /** mode local file */ `.env.${mode}.local`,
     /** mode file */ `.env.${mode}`,
@@ -1181,6 +1243,8 @@ export function loadEnv(
 
   // check if there are actual env variables starting with VITE_*
   // these are typically provided inline and should be prioritized
+  // 监测是否有以env中开头的实际环境变量
+  // 这些通常是内联提供的，并且应该优先考虑
   for (const key in process.env) {
     if (
       prefixes.some((prefix) => key.startsWith(prefix)) &&
@@ -1191,13 +1255,16 @@ export function loadEnv(
   }
 
   for (const file of envFiles) {
+    //寻找几种可能存在的文件格式路径是否存在
     const path = lookupFile(envDir, [file], { pathOnly: true, rootDir: envDir })
     if (path) {
+      //dotenv 解析.env文件
       const parsed = dotenv.parse(fs.readFileSync(path), {
         debug: process.env.DEBUG?.includes('vite:dotenv') || undefined
       })
 
       // let environment variables use each other
+      //让变量互相使用
       dotenvExpand({
         parsed,
         // prevent process.env mutation
@@ -1215,7 +1282,7 @@ export function loadEnv(
           key === 'NODE_ENV' &&
           process.env.VITE_USER_NODE_ENV === undefined
         ) {
-          // NODE_ENV override in .env file
+          // NODE_ENV override in .env.development file
           process.env.VITE_USER_NODE_ENV = value
         }
       }
@@ -1224,6 +1291,7 @@ export function loadEnv(
   return env
 }
 
+//处理环境变量前缀为数组
 export function resolveEnvPrefix({
   envPrefix = 'VITE_'
 }: UserConfig): string[] {
